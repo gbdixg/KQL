@@ -5,6 +5,7 @@ KQL queries for reference
 
 ### Autostart modification
 
+```kql
 // A file in XLStart folder was modified, excluding by MDE itself
 DeviceFileEvents
 | where Timestamp > ago(7d)
@@ -12,10 +13,11 @@ DeviceFileEvents
 | where ActionType in ('FileCreated','FileModified')
 | where InitiatingProcessFileName != 'MsMpEng.exe'
 | project Timestamp,DeviceName,ActionType,FolderPath,InitiatingProcessFileName
-
+```
 
 ### Finding Local Admins
 
+```kql
 // User is logged on with administrative rights. Also, identify if its a local account
 DeviceLogonEvents
 | where Timestamp > ago(30d)
@@ -24,18 +26,21 @@ DeviceLogonEvents
 | project Timestamp, DeviceName, AccountDomain, AccountName, LogonType, ActionType, locallogon
 | distinct AccountDomain, AccountName, DeviceName
 | sort by AccountDomain asc
+```
 
 ### Show ASR events
 
+```kql
 // Attack Surface Reduction events
 DeviceEvents 
 | where Timestamp > ago(20d)   
 | where ActionType startswith "Asr"
 | project DeviceName,ActionType,FileName,FolderPath,ProcessCommandLine,AccountName
-
+```
 
 ### Users accessing OneDrive and network home share
 
+```kql
 // Find users accessing files on OneDrive and a mapped home drive
 let days = 21d;
 let onPremDomain = 'Contoso';
@@ -51,9 +56,11 @@ on AccountName
 | where homedrive_count > 0 and onedrive_count > 0
 | sort by homedrive_count desc 
 | project AccountName,homedrive_count,onedrive_count
+```
 
 ### Uncommon PowerShell commands
 
+```kql
 // PowerShell Commands
 let powershellCommands = DeviceEvents
 | where Timestamp > ago(5d)
@@ -68,5 +75,5 @@ powershellCommands
 | where Timestamp > ago (5d)
 | join kind=leftanti (commonCommands) on PowerShellCommand
 | sort by Timestamp desc
-
+```
 
