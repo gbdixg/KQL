@@ -123,3 +123,19 @@ DeviceEvents
 | project Timestamp,DeviceName,ActionType,StateChange,StartTime,EndTime
 
 ```
+
+### USB Printer Connected
+
+```kql
+// Type: MDE Advanced Hunting
+// Purpose: List PnP Device Events for USB Printers
+DeviceEvents
+| where Timestamp > ago(7d)
+| where ActionType == "PnPDeviceConnected"
+| extend json = parse_json(AdditionalFields)
+| extend Description = tostring(json.DeviceDescription)
+| extend DeviceId = tostring(json.DeviceId)
+| extend ClassId = tostring(json.ClassId)
+| project Timestamp, DeviceId,ClassId,Description,ActionType,json
+
+```
