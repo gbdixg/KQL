@@ -107,3 +107,19 @@ let avmodetable = DeviceTvmSecureConfigurationAssessment
   | join avmodetable on DeviceId
   | project-away DeviceId1
 ```
+
+### Troubleshooting Mode times
+
+```kql
+// Type: MDE Advanced Hunting
+// Purpose: List start and end times for MDE Troubleshooting Mode
+DeviceEvents
+| where Timestamp > ago(14d)
+| where ActionType == "AntivirusTroubleshootModeEvent"
+| extend StateChange = tostring(parse_json(AdditionalFields).TroubleshootingStateChangeReason)
+| extend StartTime = tostring(parse_json(AdditionalFields).TroubleshootingStartTime)
+| extend EndTime = tostring(parse_json(AdditionalFields).TroubleshootingEndTime)
+| order by Timestamp desc
+| project Timestamp,DeviceName,ActionType,StateChange,StartTime,EndTime
+
+```
