@@ -3,7 +3,8 @@
 ## MDE Device Health
 
 ```kql
-/// Shows sendor health and impaired communication
+// Type: MDE Advanced Hunting
+// Purpose: List Devices with sendor health information and impaired communication
 DeviceTvmSecureConfigurationAssessment
 | where ConfigurationId in ('scid-91', 'scid-2000', 'scid-2001', 'scid-2002', 'scid-2003', 'scid-2010', 'scid-2011', 'scid-2012', 'scid-2013', 'scid-2014', 'scid-2016')
 | extend Test = case(
@@ -82,4 +83,27 @@ DeviceInfo
 ) on DeviceId
 | where OSPlatform in ("Windows10","Windows10WVD","Windows11","WindowsServer2012R2","WindowsServer2016","WindowsServer2019","WindowsServer2022")
 | sort by DeviceType, MachineGroup, OSPlatform
+```
+
+### MDAV version and running mode
+
+```kql
+// Type: MDE Advanced Hunting
+// Purpose: List devices with the platform, engine and signature version, and whether they are running in Active or Passive mode
+let avmodetable = DeviceTvmSecureConfigurationAssessment
+  | where Timestamp > ago(14d)
+  | where ConfigurationId == "scid-2010" and isnotnull(Context)
+  | extend avdata=parsejson(Context)
+  | extend AVMode = iif(tostring(avdata[0][0]) == '0', 'Active' , iif(tostring(avdata[0][0]) == '1', 'Passive' ,iif(tostring(avdata[0][0]) == '4', 'EDR Blocked' ,'Unknown')))
+  | project DeviceId, AVMode;
+  DeviceTvmSecureConfigurationAssessment
+  | where ConfigurationId == "scid-2011" and isnotnull(Context)
+  | extend avdata=parsejson(Context)
+  | extend AVSigVersion = tostring(avdata[0][0])
+  | extend AVEngineVersion = tostring(avdata[0][1])
+  | extend AVSigLastUpdateTime = tostring(avdata[0][2])
+  | extend AVProductVersion = tostring(avdata[0][3]) 
+  | project DeviceId, DeviceName, OSPlatform, AVSigVersion, AVEngineVersion, AVSigLastUpdateTime, AVProductVersion, IsCompliant, IsApplicable
+  | join avmodetable on DeviceId
+  | project-away DeviceId1
 ```
